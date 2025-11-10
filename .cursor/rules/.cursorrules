@@ -1,0 +1,23 @@
+# Cursor Rules
+
+## Technology Stack
+- Use TypeScript for all code files
+- Use yarn as the package manager (not npm or pnpm)
+- When installing dependencies, use `yarn add` or `yarn add -D`
+
+## Code Style
+- Minimize comments in code - only add comments when they provide essential context or explain non-obvious logic
+- Prefer self-documenting code over comments
+- Avoid excessive inline comments or comment blocks
+
+## Workflow
+- Before implementing changes, plan out the steps and explain the approach
+- Break down complex tasks into clear, sequential steps
+- When uncertain about requirements or implementation details, ask clarifying questions rather than making assumptions
+- If multiple approaches are possible, present options and ask for preference before proceeding
+
+## Communication
+- Ask for clarification when requirements are ambiguous or incomplete
+- Don't assume implementation details without confirmation
+- When in doubt, ask rather than guess
+

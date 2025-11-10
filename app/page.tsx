@@ -1,14 +1,22 @@
+import DocumentUpload from './components/DocumentUpload';
+import ChatInterface from './components/ChatInterface';
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Resume RAG
-        </h1>
-        <p className="text-center text-lg text-gray-600">
-          An AI resume assistant that helps you curate your resume using your experience, 
-          the positions you&apos;re interested in, and the directives you provide it.
-        </p>
+    <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
+      <div className="z-10 max-w-5xl w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">
+            Document RAG System
+          </h1>
+          <p className="text-lg text-gray-600">
+            Upload documents and ask questions using AI-powered retrieval.
+          </p>
+        </div>
+        <div className="space-y-8">
+          <DocumentUpload />
+          <ChatInterface />
+        </div>
       </div>
     </main>
   );
