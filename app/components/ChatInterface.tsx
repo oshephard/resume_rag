@@ -13,6 +13,13 @@ interface QueryResponse {
   error?: string;
 }
 
+interface ExperienceResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  chunksProcessed?: number;
+}
+
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -37,33 +44,77 @@ export default function ChatInterface() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/documents/query", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: userMessage }),
-      });
+      if (userMessage.startsWith("/new-experience")) {
+        const experienceText = userMessage
+          .replace("/new-experience", "")
+          .trim();
 
-      const data: QueryResponse = await response.json();
+        if (!experienceText) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "Please provide your experience after the command. Example: /new-experience I worked on a project that involved...",
+            },
+          ]);
+          setLoading(false);
+          return;
+        }
 
-      if (data.error) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: `Error: ${data.error}` },
-        ]);
+        const response = await fetch("/api/documents/experience", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ experience: experienceText }),
+        });
+
+        const data: ExperienceResponse = await response.json();
+
+        if (data.error) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `Error: ${data.error}` },
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: data.message || "Experience stored successfully!",
+            },
+          ]);
+        }
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.answer },
-        ]);
+        const response = await fetch("/api/documents/query", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: userMessage }),
+        });
+
+        const data: QueryResponse = await response.json();
+
+        if (data.error) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `Error: ${data.error}` },
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: data.answer },
+          ]);
+        }
       }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Failed to get response. Please try again.",
+          content: "Failed to process request. Please try again.",
         },
       ]);
     } finally {
@@ -117,7 +168,7 @@ export default function ChatInterface() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question..."
+          placeholder="Ask a question or use /new-experience to add an experience..."
           className="flex-1 border border-gray-700 rounded-md px-4 py-2 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={loading}
         />

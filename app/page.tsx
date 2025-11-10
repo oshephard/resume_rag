@@ -79,7 +79,7 @@ export default function Home() {
               )}
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Document RAG System</h1>
+              <h1 className="text-2xl font-bold text-white">My Resume Assistant</h1>
               <p className="text-sm text-gray-400">
                 Upload documents and ask questions using AI-powered retrieval.
               </p>
