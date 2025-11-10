@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+- Do not include comments within code UNLESS the code is very complex and would benefit from
+  some context.
+- Please include JSDOC comments for all lib functions, but keep them short and concise.
+- Please only add `console.info` or `console.debug` logs if explicitly asked to do so.

@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+Please always log the error with a helpful error message, like this:
+
+```
+try {
+  ...
+} catch (error) {
+  console.error('Failed to ____: ', error);
+  throw error;
+}
+```
