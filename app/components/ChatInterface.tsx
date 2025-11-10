@@ -1,29 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface QueryResponse {
-  answer: string;
-  context?: string;
-  error?: string;
-}
-
-interface ExperienceResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  chunksProcessed?: number;
-}
-
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, sendMessage, status, error } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/documents/query",
+    }),
+  });
+
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -34,125 +23,47 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setLoading(true);
-
-    try {
-      if (userMessage.startsWith("/new-experience")) {
-        const experienceText = userMessage
-          .replace("/new-experience", "")
-          .trim();
-
-        if (!experienceText) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content:
-                "Please provide your experience after the command. Example: /new-experience I worked on a project that involved...",
-            },
-          ]);
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch("/api/documents/experience", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ experience: experienceText }),
-        });
-
-        const data: ExperienceResponse = await response.json();
-
-        if (data.error) {
-          setMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: `Error: ${data.error}` },
-          ]);
-        } else {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: data.message || "Experience stored successfully!",
-            },
-          ]);
-        }
-      } else {
-        const response = await fetch("/api/documents/query", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query: userMessage }),
-        });
-
-        const data: QueryResponse = await response.json();
-
-        if (data.error) {
-          setMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: `Error: ${data.error}` },
-          ]);
-        } else {
-          setMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: data.answer },
-          ]);
-        }
-      }
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Failed to process request. Please try again.",
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="h-full flex flex-col p-6 bg-gray-800">
       <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 mb-4 bg-gray-900 min-h-0">
+        {error && (
+          <div className="bg-red-900 border border-red-700 rounded-lg p-3 mb-4 text-red-200">
+            Error: {error.message || String(error)}
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="text-gray-400 text-center mt-8">
             Ask a question about your uploaded documents...
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((message, index) => (
+            {messages.map((m) => (
               <div
-                key={index}
+                key={m.id}
                 className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
+                  m.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === "user"
+                  className={`max-w-[80%] rounded-lg p-3 whitespace-pre-wrap ${
+                    m.role === "user"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-800 text-gray-200 border border-gray-700"
                   }`}
                 >
-                  <div className="font-semibold text-xs mb-1 opacity-70">
-                    {message.role === "user" ? "You" : "Assistant"}
-                  </div>
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  {m.parts.map((part, index) => {
+                    switch (part.type) {
+                      case "text":
+                        return <p key={index}>{part.text}</p>;
+                    }
+                  })}
+                  {status === "streaming" && (
+                    <div className="animate-pulse">...</div>
+                  )}
                 </div>
               </div>
             ))}
-            {loading && (
+            {status === "submitted" && (
               <div className="flex justify-start">
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-gray-300">
                   <div className="animate-pulse">Thinking...</div>
@@ -163,18 +74,25 @@ export default function ChatInterface() {
           </div>
         )}
       </div>
-      <form onSubmit={handleSubmit} className="flex gap-2 flex-shrink-0">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput("");
+        }}
+        className="flex gap-2 flex-shrink-0"
+      >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question or use /new-experience to add an experience..."
           className="flex-1 border border-gray-700 rounded-md px-4 py-2 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={loading}
+          disabled={status === "submitted"}
         />
         <button
           type="submit"
-          disabled={!input.trim() || loading}
+          disabled={!input.trim() || status === "submitted"}
           className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           Send
