@@ -2,7 +2,21 @@
 alwaysApply: true
 ---
 
-# Cursor Rules
+# Project overview
+
+This is an AI assistant that can help you with your resume. It can answer questions about your resume,
+generate new resume data for you based on your experience, and suggest improvements/changes based on a
+job posting.
+Users may:
+
+- Upload PDFs like resumes, CVs.
+- Import LinkedIn posts.
+- Import Certificate badges.
+- Provide simple text explaining an experience they recently had.
+  Then, using that data as context, the Assistant can:
+- Generate new Resumes
+- Answer questions about your experience
+- Suggest relevant experience for job postings, interview questions, and the like
 
 ## Technology Stack
 

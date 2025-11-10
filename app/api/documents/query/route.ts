@@ -20,13 +20,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log for debugging - verify we're getting resume context
-    console.log(`Query: "${userQuery}"`);
-    console.log(
-      `Retrieved ${context.split("--- SECTION").length - 1} resume sections`
-    );
-    console.log(`Context length: ${context.length} characters`);
-
     const systemPrompt = `You are a helpful assistant answering questions about a resume/CV. 
 You MUST base your answers ONLY on the provided resume context. 
 

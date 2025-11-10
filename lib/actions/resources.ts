@@ -22,20 +22,14 @@ export async function createResource({
     const documentId = result.rows[0].id;
 
     // Chunk the content
-    console.info("Chunking content, length:", content.length);
     const chunks = chunkText(content);
-    console.info("Chunks created:", chunks.length);
 
     if (chunks.length === 0) {
       throw new Error("No chunks created from content");
     }
 
     // Generate embeddings for all chunks
-    console.info("Generating embeddings for", chunks.length, "chunks");
     const embeddings = await generateEmbeddings(chunks);
-
-    console.info("Embeddings generated");
-    console.debug(embeddings);
 
     // Store chunks with embeddings
     for (let i = 0; i < chunks.length; i++) {
@@ -62,9 +56,7 @@ export async function createResource({
 
       // Check embedding dimension (should be 1536 for text-embedding-3-small)
       if (embeddingArray.length !== 1536) {
-        console.warn(
-          `Unexpected embedding dimension at index ${i}: expected 1536, got ${embeddingArray.length}`
-        );
+        // Dimension mismatch - continue but note it may affect search quality
       }
 
       // Build embedding string more safely

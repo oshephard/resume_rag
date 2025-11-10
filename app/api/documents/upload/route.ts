@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Extract text from file (handles both PDF and text files)
-    console.info("Extracting text from file");
     const text = await extractTextFromFile(file);
 
     if (!text || text.trim().length === 0) {
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.info("Creating resource");
     // Store the document and generate embeddings
     const result = await createResource({
       content: text,
