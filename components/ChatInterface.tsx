@@ -23,6 +23,8 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
+  console.log(messages);
+
   return (
     <div className="h-full flex flex-col p-6 bg-gray-800">
       <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 mb-4 bg-gray-900 min-h-0">
@@ -63,13 +65,6 @@ export default function ChatInterface() {
                 </div>
               </div>
             ))}
-            {status === "submitted" && (
-              <div className="flex justify-start">
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-gray-300">
-                  <div className="animate-pulse">Thinking...</div>
-                </div>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
         )}

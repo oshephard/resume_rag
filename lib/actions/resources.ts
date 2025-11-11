@@ -1,6 +1,7 @@
 "use server";
 
-import { query } from "@/lib/db";
+import { db } from "../db";
+import { documents, embeddings } from "@/lib/db/schema";
 import { chunkText, generateEmbeddings } from "@/lib/embeddings";
 
 export async function createResource({
@@ -13,37 +14,35 @@ export async function createResource({
   try {
     const documentName = name || `Document ${Date.now()}`;
 
-    // Insert document
-    const result = await query(
-      "INSERT INTO documents (name, content) VALUES ($1, $2) RETURNING id",
-      [documentName, content]
-    );
+    const [document] = await db
+      .insert(documents)
+      .values({
+        name: documentName,
+        content: content,
+      })
+      .returning();
 
-    const documentId = result.rows[0].id;
+    const documentId = document.id;
 
-    // Chunk the content
     const chunks = chunkText(content);
 
     if (chunks.length === 0) {
       throw new Error("No chunks created from content");
     }
 
-    // Generate embeddings for all chunks
-    const embeddings = await generateEmbeddings(chunks);
+    const embeddingArrays = await generateEmbeddings(chunks);
 
-    // Store chunks with embeddings
     for (let i = 0; i < chunks.length; i++) {
-      if (!embeddings[i] || !Array.isArray(embeddings[i])) {
-        console.error(`Invalid embedding at index ${i}:`, embeddings[i]);
+      if (!embeddingArrays[i] || !Array.isArray(embeddingArrays[i])) {
+        console.error(`Invalid embedding at index ${i}:`, embeddingArrays[i]);
         throw new Error(`Invalid embedding at index ${i}`);
       }
 
-      const embeddingArray = embeddings[i];
+      const embeddingArray = embeddingArrays[i];
       if (embeddingArray.length === 0) {
         throw new Error(`Empty embedding at index ${i}`);
       }
 
-      // Validate embedding array contains only numbers
       if (
         !embeddingArray.every((val) => typeof val === "number" && isFinite(val))
       ) {
@@ -54,19 +53,17 @@ export async function createResource({
         throw new Error(`Embedding at index ${i} contains non-numeric values`);
       }
 
-      // Check embedding dimension (should be 1536 for text-embedding-3-small)
       if (embeddingArray.length !== 1536) {
         // Dimension mismatch - continue but note it may affect search quality
       }
 
-      // Build embedding string more safely
       try {
-        const embeddingString = `[${embeddingArray.join(",")}]`;
-        await query(
-          `INSERT INTO embeddings (document_id, chunk_text, embedding, chunk_index)
-           VALUES ($1, $2, $3::vector, $4)`,
-          [documentId, chunks[i], embeddingString, i]
-        );
+        await db.insert(embeddings).values({
+          documentId: documentId,
+          chunkText: chunks[i],
+          embedding: embeddingArray,
+          chunkIndex: i,
+        });
       } catch (dbError: any) {
         console.error(`Error inserting embedding at index ${i}:`, dbError);
         throw new Error(

@@ -1,26 +1,35 @@
-import { query } from "./db";
 import { generateEmbedding } from "./embeddings";
+import { db } from "./db";
+import { embeddings, documents } from "./db/schema";
+import { cosineDistance, sql, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function findSimilarChunks(
   queryEmbedding: number[],
   limit: number = 5
 ): Promise<Array<{ chunk_text: string; document_id: number; name: string }>> {
-  const embeddingString = `[${queryEmbedding.join(",")}]`;
+  const similarity = sql<number>`1 - (${cosineDistance(
+    embeddings.embedding,
+    queryEmbedding
+  )})`;
 
-  const result = await query(
-    `SELECT 
-      e.chunk_text,
-      e.document_id,
-      d.name,
-      1 - (e.embedding <=> $1::vector) as similarity
-    FROM embeddings e
-    JOIN documents d ON e.document_id = d.id
-    ORDER BY e.embedding <=> $1::vector
-    LIMIT $2`,
-    [embeddingString, limit]
-  );
+  const result = await db
+    .select({
+      chunk_text: embeddings.chunkText,
+      document_id: embeddings.documentId,
+      name: documents.name,
+      similarity: similarity,
+    })
+    .from(embeddings)
+    .innerJoin(documents, eq(embeddings.documentId, documents.id))
+    .orderBy(desc(similarity))
+    .limit(limit);
 
-  return result.rows;
+  return result.map((row) => ({
+    chunk_text: row.chunk_text,
+    document_id: row.document_id,
+    name: row.name,
+  }));
 }
 
 export async function getContextForQuery(

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "init-db": "tsx scripts/init-db.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.64",
@@ -16,11 +19,14 @@
     "@editorjs/header": "^2.8.8",
     "@editorjs/list": "^2.0.8",
     "@editorjs/paragraph": "^2.11.7",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.90",
+    "drizzle-orm": "^0.44.7",
     "next": "^14.2.5",
     "openai": "^6.8.1",
     "pdfjs-dist": "3.11.174",
     "pg": "^8.16.3",
+    "postgres": "^3.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^4.1.12"
@@ -32,6 +38,7 @@
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.6",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.41",
