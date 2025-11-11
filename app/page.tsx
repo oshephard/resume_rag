@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import DocumentUpload from "../components/DocumentUpload";
 import ChatInterface from "../components/ChatInterface";
 import DocumentsList from "../components/DocumentsList";
@@ -13,6 +13,21 @@ const Editor = dynamic(() => import("@/components/Editor"), {
 export default function Home() {
   const [showUpload, setShowUpload] = useState(false);
   const [showDocumentsDrawer, setShowDocumentsDrawer] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(
+    null
+  );
+  const documentsListRef = useRef<{ refresh: () => void } | null>(null);
+
+  const handleSelectDocument = (documentId: number) => {
+    setSelectedDocumentId(documentId);
+  };
+
+  const handleDocumentDeleted = () => {
+    setSelectedDocumentId(null);
+    if (documentsListRef.current) {
+      documentsListRef.current.refresh();
+    }
+  };
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-gray-800">
@@ -107,7 +122,11 @@ export default function Home() {
             )}
           </div>
           <div className="flex-1 overflow-hidden p-4">
-            <DocumentsList />
+            <DocumentsList
+              ref={documentsListRef}
+              selectedDocumentId={selectedDocumentId}
+              onSelectDocument={handleSelectDocument}
+            />
           </div>
         </div>
         <div className="flex-1 overflow-hidden grid grid-cols-12 gap-4 p-4 h-full">
@@ -124,7 +143,10 @@ export default function Home() {
               <h2 className="text-lg font-semibold text-white">Editor</h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <Editor />
+              <Editor
+                documentId={selectedDocumentId}
+                onDocumentDeleted={handleDocumentDeleted}
+              />
             </div>
           </div>
         </div>
