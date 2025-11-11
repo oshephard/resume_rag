@@ -49,49 +49,50 @@ export default function DocumentsList() {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 bg-gray-800">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white">Documents</h2>
+    <div className="h-full flex flex-col bg-gray-800">
+      <div className="flex items-center justify-end mb-2 flex-shrink-0">
         <button
           onClick={fetchDocuments}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Refresh
         </button>
       </div>
 
       {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-400">Loading documents...</div>
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          <div className="text-gray-400 text-sm">Loading documents...</div>
         </div>
       ) : error ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="bg-red-900 border border-red-700 rounded-lg p-4 text-red-200">
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          <div className="bg-red-900 border border-red-700 rounded-lg p-3 text-red-200 text-sm">
             {error}
           </div>
         </div>
       ) : documents.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-400 text-center">
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          <div className="text-gray-400 text-center text-sm">
             No documents found. Upload a document to get started.
           </div>
         </div>
       ) : (
-        <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto bg-gray-900">
+        <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto bg-gray-900 min-h-0">
           <div className="divide-y divide-gray-700">
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="p-4 hover:bg-gray-800 transition-colors"
+                className="p-3 hover:bg-gray-800 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium mb-1">{doc.name}</h3>
-                    <p className="text-sm text-gray-400">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-medium mb-1 text-sm truncate">
+                      {doc.name}
+                    </h3>
+                    <p className="text-xs text-gray-400">
                       Uploaded {formatDate(doc.createdAt)}
                     </p>
                   </div>
-                  <div className="text-sm text-gray-500">ID: {doc.id}</div>
+                  <div className="text-xs text-gray-500 ml-2">ID: {doc.id}</div>
                 </div>
               </div>
             ))}

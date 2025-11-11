@@ -23,11 +23,9 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
-  console.log(messages);
-
   return (
-    <div className="h-full flex flex-col p-6 bg-gray-800">
-      <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 mb-4 bg-gray-900 min-h-0">
+    <div className="h-full flex flex-col bg-gray-800">
+      <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 mb-2 bg-gray-900 min-h-0">
         {error && (
           <div className="bg-red-900 border border-red-700 rounded-lg p-3 mb-4 text-red-200">
             Error: {error.message || String(error)}
@@ -82,13 +80,13 @@ export default function ChatInterface() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question or use /new-experience to add an experience..."
-          className="flex-1 border border-gray-700 rounded-md px-4 py-2 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-700 rounded-md px-3 py-2 text-sm bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={status === "submitted"}
         />
         <button
           type="submit"
           disabled={!input.trim() || status === "submitted"}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex-shrink-0"
         >
           Send
         </button>

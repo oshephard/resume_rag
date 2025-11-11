@@ -40,7 +40,7 @@ const Editor: React.FC<EditorProps> = ({ initialData }) => {
   return (
     <div
       id={EDITOR_CONTAINER_ID}
-      className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 mb-4 bg-gray-900 min-h-0 h-full"
+      className="flex-1 border border-gray-700 rounded-lg overflow-y-auto p-4 bg-gray-900 min-h-0 h-full"
     />
   );
 };
