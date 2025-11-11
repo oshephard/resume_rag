@@ -3,8 +3,9 @@ import { convertToModelMessages, stepCountIs, streamText, UIMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { getContextForQuery } from "@/lib/rag";
 import { provideResumeSuggestions } from "@/lib/tools/resume-suggestions";
-import { SYSTEM_PROMPT } from "@/app/constants/system-prompt";
+import { SYSTEM_PROMPT } from "@/constants/system-prompt";
 import { addExperience } from "@/lib/tools/add-experience";
+import { getInformation } from "@/lib/tools/get-information";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
       tools: {
         provideResumeSuggestions,
         addExperience,
+        getInformation,
       },
     });
 

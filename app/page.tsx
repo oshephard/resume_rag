@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import DocumentUpload from "./components/DocumentUpload";
-import ChatInterface from "./components/ChatInterface";
+import DocumentUpload from "../components/DocumentUpload";
+import ChatInterface from "../components/ChatInterface";
+import Editor from "@/components/Editor";
 
 export default function Home() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <main className="flex h-screen overflow-hidden bg-gray-800">
@@ -16,7 +17,9 @@ export default function Home() {
       >
         <div className="h-full overflow-y-auto p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Upload Document</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Upload Document
+            </h2>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 hover:bg-slate-200 rounded-md transition-colors text-gray-800"
@@ -79,7 +82,9 @@ export default function Home() {
               )}
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">My Resume Assistant</h1>
+              <h1 className="text-2xl font-bold text-white">
+                My Resume Assistant
+              </h1>
               <p className="text-sm text-gray-400">
                 Upload documents and ask questions using AI-powered retrieval.
               </p>
@@ -90,7 +95,9 @@ export default function Home() {
           <ChatInterface />
         </div>
       </div>
+      <div className="flex-1 flex-col overflow-hidden">
+        <Editor />
+      </div>
     </main>
   );
 }
-

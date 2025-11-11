@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "My Resume Assistant - AI Resume Assistant",
-  description: "An AI resume assistant that helps you curate your resume using your experience, the positions you're interested in, and the directives you provide it.",
+  description:
+    "An AI resume assistant that helps you curate your resume using your experience, the positions you're interested in, and the directives you provide it.",
 };
 
 export default function RootLayout({
@@ -20,4 +21,3 @@ export default function RootLayout({
     </html>
   );
 }
-
