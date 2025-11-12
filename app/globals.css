@@ -26,3 +26,23 @@ body {
   }
 }
 
+@layer base {
+  /* Override Tailwind reset for EditorJS container */
+  #editorjs-container h1,
+  #editorjs-container h2,
+  #editorjs-container h3,
+  #editorjs-container h4,
+  #editorjs-container h5,
+  #editorjs-container h6 {
+    font-size: revert;
+    font-weight: revert;
+    margin: revert;
+  }
+
+  #editorjs-container button {
+    background: revert;
+    border: revert;
+    padding: revert;
+    margin: revert;
+  }
+}

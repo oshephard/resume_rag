@@ -215,6 +215,7 @@ const Editor: React.FC<EditorProps> = ({ documentId, onDocumentDeleted }) => {
       editorInstance.current = new EditorJS({
         holder: EDITOR_CONTAINER_ID,
         data: { blocks: [] },
+        inlineToolbar: ["link", "marker", "bold", "italic"],
         tools: {
           header: Header,
           list: List,

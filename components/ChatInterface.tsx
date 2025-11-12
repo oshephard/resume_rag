@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import ReactMarkdown from "react-markdown";
 export default function ChatInterface() {
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
@@ -54,15 +55,96 @@ export default function ChatInterface() {
                   {m.parts.map((part, index) => {
                     switch (part.type) {
                       case "text":
-                        return <p key={index}>{part.text}</p>;
+                        return (
+                          <ReactMarkdown
+                            key={index}
+                            components={{
+                              p: ({ children }) => (
+                                <p className="mb-2 last:mb-0">{children}</p>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-inside mb-2 space-y-1">
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="list-decimal list-inside mb-2 space-y-1">
+                                  {children}
+                                </ol>
+                              ),
+                              li: ({ children }) => (
+                                <li className="ml-2">{children}</li>
+                              ),
+                              code: ({ children, className }) => {
+                                const isInline = !className;
+                                return isInline ? (
+                                  <code className="bg-gray-700 px-1 py-0.5 rounded text-sm">
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <code className="block bg-gray-700 p-2 rounded text-sm overflow-x-auto">
+                                    {children}
+                                  </code>
+                                );
+                              },
+                              pre: ({ children }) => (
+                                <pre className="mb-2">{children}</pre>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="font-semibold">
+                                  {children}
+                                </strong>
+                              ),
+                              em: ({ children }) => (
+                                <em className="italic">{children}</em>
+                              ),
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href}
+                                  className="text-blue-400 hover:text-blue-300 underline"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {children}
+                                </a>
+                              ),
+                              h1: ({ children }) => (
+                                <h1 className="text-xl font-bold mb-2 mt-4 first:mt-0">
+                                  {children}
+                                </h1>
+                              ),
+                              h2: ({ children }) => (
+                                <h2 className="text-lg font-bold mb-2 mt-4 first:mt-0">
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">
+                                  {children}
+                                </h3>
+                              ),
+                              blockquote: ({ children }) => (
+                                <blockquote className="border-l-4 border-gray-600 pl-4 italic my-2">
+                                  {children}
+                                </blockquote>
+                              ),
+                            }}
+                          >
+                            {part.text}
+                          </ReactMarkdown>
+                        );
                     }
                   })}
-                  {status === "streaming" && (
-                    <div className="animate-pulse">...</div>
-                  )}
                 </div>
               </div>
             ))}
+            {status === "submitted" && (
+              <div className="flex justify-start">
+                <div className="bg-white border rounded-lg p-3">
+                  <div className="animate-pulse">Thinking...</div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}
