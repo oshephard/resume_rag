@@ -5,6 +5,8 @@ import DocumentUpload from "../components/DocumentUpload";
 import ChatInterface from "../components/ChatInterface";
 import DocumentsList from "../components/DocumentsList";
 import dynamic from "next/dynamic";
+import type { EditorRef } from "@/components/Editor";
+import type { DiffOperation } from "@/lib/utils/diff";
 
 const Editor = dynamic(() => import("@/components/Editor"), {
   ssr: false,
@@ -17,6 +19,7 @@ export default function Home() {
     null
   );
   const documentsListRef = useRef<{ refresh: () => void } | null>(null);
+  const editorRef = useRef<EditorRef | null>(null);
 
   const handleSelectDocument = (documentId: number) => {
     setSelectedDocumentId(documentId);
@@ -26,6 +29,16 @@ export default function Home() {
     setSelectedDocumentId(null);
     if (documentsListRef.current) {
       documentsListRef.current.refresh();
+    }
+  };
+
+  const handleApplyChanges = async (operations: DiffOperation[], documentId: number) => {
+    if (editorRef.current && selectedDocumentId === documentId) {
+      try {
+        await editorRef.current.applyChanges(operations);
+      } catch (error) {
+        console.error("Failed to apply changes: ", error);
+      }
     }
   };
 
@@ -135,7 +148,10 @@ export default function Home() {
               <h2 className="text-lg font-semibold text-white">Chat</h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <ChatInterface />
+              <ChatInterface
+                selectedDocumentId={selectedDocumentId}
+                onApplyChanges={handleApplyChanges}
+              />
             </div>
           </div>
           <div className="col-span-6 overflow-hidden flex flex-col">
@@ -144,6 +160,7 @@ export default function Home() {
             </div>
             <div className="flex-1 overflow-hidden">
               <Editor
+                ref={editorRef}
                 documentId={selectedDocumentId}
                 onDocumentDeleted={handleDocumentDeleted}
               />

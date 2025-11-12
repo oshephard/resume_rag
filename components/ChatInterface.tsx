@@ -3,16 +3,34 @@
 import { useRef, useEffect, useState } from "react";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 import ReactMarkdown from "react-markdown";
-export default function ChatInterface() {
+import type { DiffOperation } from "@/lib/utils/diff";
+import DiffPreview from "./DiffPreview";
+import { DefaultChatTransport, UIDataTypes, UIMessage, UITools } from "ai";
+
+interface ChatInterfaceProps {
+  selectedDocumentId?: number | null;
+  onApplyChanges?: (operations: DiffOperation[], documentId: number) => void;
+}
+
+export default function ChatInterface({
+  selectedDocumentId,
+  onApplyChanges,
+}: ChatInterfaceProps) {
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/documents/query",
+      body: {
+        documentId: selectedDocumentId,
+      },
     }),
   });
 
   const [input, setInput] = useState("");
+  const [pendingChanges, setPendingChanges] = useState<{
+    operations: DiffOperation[];
+    documentId: number;
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +41,39 @@ export default function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const extractToolResults = (
+    message: UIMessage<unknown, UIDataTypes, UITools>
+  ): DiffOperation[] | null => {
+    if (message.role !== "assistant") return null;
+
+    const allStructuredChanges: DiffOperation[] = [];
+
+    if (message.parts) {
+      for (const part of message.parts) {
+        if (part.type === "tool-provideResumeSuggestions") {
+          allStructuredChanges.push(...part.output?.structuredChanges);
+        }
+      }
+    }
+
+    return allStructuredChanges;
+  };
+
+  const handleApplyClick = (operations: DiffOperation[]) => {
+    setPendingChanges({ operations, documentId: selectedDocumentId });
+  };
+
+  const handleConfirmApply = () => {
+    if (pendingChanges && onApplyChanges) {
+      onApplyChanges(pendingChanges.operations, pendingChanges.documentId);
+      setPendingChanges(null);
+    }
+  };
+
+  const handleCancelApply = () => {
+    setPendingChanges(null);
+  };
 
   return (
     <div className="h-full flex flex-col bg-gray-800">
@@ -38,109 +89,124 @@ export default function ChatInterface() {
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+            {messages.map((m) => {
+              const toolResults = extractToolResults(m);
+              const hasStructuredChanges =
+                toolResults && toolResults.length > 0;
+              return (
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 whitespace-pre-wrap ${
-                    m.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800 text-gray-200 border border-gray-700"
+                  key={m.id}
+                  className={`flex ${
+                    m.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {m.parts.map((part, index) => {
-                    switch (part.type) {
-                      case "text":
-                        return (
-                          <ReactMarkdown
-                            key={index}
-                            components={{
-                              p: ({ children }) => (
-                                <p className="mb-2 last:mb-0">{children}</p>
-                              ),
-                              ul: ({ children }) => (
-                                <ul className="list-disc list-inside mb-2 space-y-1">
-                                  {children}
-                                </ul>
-                              ),
-                              ol: ({ children }) => (
-                                <ol className="list-decimal list-inside mb-2 space-y-1">
-                                  {children}
-                                </ol>
-                              ),
-                              li: ({ children }) => (
-                                <li className="ml-2">{children}</li>
-                              ),
-                              code: ({ children, className }) => {
-                                const isInline = !className;
-                                return isInline ? (
-                                  <code className="bg-gray-700 px-1 py-0.5 rounded text-sm">
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 whitespace-pre-wrap ${
+                      m.role === "user"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-200 border border-gray-700"
+                    }`}
+                  >
+                    {m.parts.map((part, index) => {
+                      switch (part.type) {
+                        case "text":
+                          return (
+                            <ReactMarkdown
+                              key={index}
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-2 last:mb-0">{children}</p>
+                                ),
+                                ul: ({ children }) => (
+                                  <ul className="list-disc list-inside mb-2 space-y-1">
                                     {children}
-                                  </code>
-                                ) : (
-                                  <code className="block bg-gray-700 p-2 rounded text-sm overflow-x-auto">
+                                  </ul>
+                                ),
+                                ol: ({ children }) => (
+                                  <ol className="list-decimal list-inside mb-2 space-y-1">
                                     {children}
-                                  </code>
-                                );
-                              },
-                              pre: ({ children }) => (
-                                <pre className="mb-2">{children}</pre>
-                              ),
-                              strong: ({ children }) => (
-                                <strong className="font-semibold">
-                                  {children}
-                                </strong>
-                              ),
-                              em: ({ children }) => (
-                                <em className="italic">{children}</em>
-                              ),
-                              a: ({ href, children }) => (
-                                <a
-                                  href={href}
-                                  className="text-blue-400 hover:text-blue-300 underline"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  {children}
-                                </a>
-                              ),
-                              h1: ({ children }) => (
-                                <h1 className="text-xl font-bold mb-2 mt-4 first:mt-0">
-                                  {children}
-                                </h1>
-                              ),
-                              h2: ({ children }) => (
-                                <h2 className="text-lg font-bold mb-2 mt-4 first:mt-0">
-                                  {children}
-                                </h2>
-                              ),
-                              h3: ({ children }) => (
-                                <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">
-                                  {children}
-                                </h3>
-                              ),
-                              blockquote: ({ children }) => (
-                                <blockquote className="border-l-4 border-gray-600 pl-4 italic my-2">
-                                  {children}
-                                </blockquote>
-                              ),
-                            }}
-                          >
-                            {part.text}
-                          </ReactMarkdown>
-                        );
-                    }
-                  })}
+                                  </ol>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="ml-2">{children}</li>
+                                ),
+                                code: ({ children, className }) => {
+                                  const isInline = !className;
+                                  return isInline ? (
+                                    <code className="bg-gray-700 px-1 py-0.5 rounded text-sm">
+                                      {children}
+                                    </code>
+                                  ) : (
+                                    <code className="block bg-gray-700 p-2 rounded text-sm overflow-x-auto">
+                                      {children}
+                                    </code>
+                                  );
+                                },
+                                pre: ({ children }) => (
+                                  <pre className="mb-2">{children}</pre>
+                                ),
+                                strong: ({ children }) => (
+                                  <strong className="font-semibold">
+                                    {children}
+                                  </strong>
+                                ),
+                                em: ({ children }) => (
+                                  <em className="italic">{children}</em>
+                                ),
+                                a: ({ href, children }) => (
+                                  <a
+                                    href={href}
+                                    className="text-blue-400 hover:text-blue-300 underline"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {children}
+                                  </a>
+                                ),
+                                h1: ({ children }) => (
+                                  <h1 className="text-xl font-bold mb-2 mt-4 first:mt-0">
+                                    {children}
+                                  </h1>
+                                ),
+                                h2: ({ children }) => (
+                                  <h2 className="text-lg font-bold mb-2 mt-4 first:mt-0">
+                                    {children}
+                                  </h2>
+                                ),
+                                h3: ({ children }) => (
+                                  <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">
+                                    {children}
+                                  </h3>
+                                ),
+                                blockquote: ({ children }) => (
+                                  <blockquote className="border-l-4 border-gray-600 pl-4 italic my-2">
+                                    {children}
+                                  </blockquote>
+                                ),
+                              }}
+                            >
+                              {part.text}
+                            </ReactMarkdown>
+                          );
+                      }
+                    })}
+                    {hasStructuredChanges && (
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <button
+                          onClick={() => handleApplyClick(toolResults)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                        >
+                          Apply Changes
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {status === "submitted" && (
               <div className="flex justify-start">
-                <div className="bg-white border rounded-lg p-3">
+                <div className="bg-gray-800 text-gray-200 border border-gray-700">
                   <div className="animate-pulse">Thinking...</div>
                 </div>
               </div>
@@ -173,6 +239,14 @@ export default function ChatInterface() {
           Send
         </button>
       </form>
+      {pendingChanges && (
+        <DiffPreview
+          operations={pendingChanges.operations}
+          documentId={pendingChanges.documentId}
+          onConfirm={handleConfirmApply}
+          onCancel={handleCancelApply}
+        />
+      )}
     </div>
   );
 }

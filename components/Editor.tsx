@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import List from "@editorjs/list";
 import Paragraph from "@editorjs/paragraph";
+import type { DiffOperation } from "@/lib/utils/diff";
+import { applyDiffOperations } from "@/lib/utils/diff";
 
 const EDITOR_CONTAINER_ID = "editorjs-container";
 
@@ -13,7 +15,11 @@ interface EditorProps {
   onDocumentDeleted?: () => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ documentId, onDocumentDeleted }) => {
+export interface EditorRef {
+  applyChanges: (operations: DiffOperation[]) => Promise<void>;
+}
+
+const Editor = forwardRef<EditorRef, EditorProps>(({ documentId, onDocumentDeleted }, ref) => {
   const editorInstance = useRef<EditorJS | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -97,6 +103,33 @@ const Editor: React.FC<EditorProps> = ({ documentId, onDocumentDeleted }) => {
       .filter((line: string) => line.trim().length > 0)
       .join("\n\n");
   };
+
+  const applyChanges = async (operations: DiffOperation[]): Promise<void> => {
+    if (!editorInstance.current) {
+      throw new Error("Editor not initialized");
+    }
+
+    try {
+      const currentContent = await convertEditorJSBlocksToText();
+      const newContent = applyDiffOperations(currentContent, operations);
+      const blocks = convertTextToEditorJSBlocks(newContent);
+
+      if (editorInstance.current) {
+        await editorInstance.current.render({ blocks });
+      }
+
+      setSuccessMessage("Changes applied successfully");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Failed to apply changes: ", err);
+      setError(err.message || "Failed to apply changes");
+      throw err;
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    applyChanges,
+  }));
 
   const handleSave = async () => {
     if (!documentId || !editorInstance.current) {
@@ -324,6 +357,8 @@ const Editor: React.FC<EditorProps> = ({ documentId, onDocumentDeleted }) => {
       <div id={EDITOR_CONTAINER_ID} className="flex-1 p-4 min-h-0" />
     </div>
   );
-};
+});
+
+Editor.displayName = "Editor";
 
 export default Editor;
