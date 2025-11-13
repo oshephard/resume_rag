@@ -23,6 +23,8 @@ export default function ChatInterface({
     }),
   });
 
+  const isStreaming = status === "submitted" || status === "streaming";
+
   const [input, setInput] = useState("");
   const [pendingChanges, setPendingChanges] = useState<{
     operations: DiffOperation[];
@@ -87,10 +89,11 @@ export default function ChatInterface({
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((m) => {
+            {messages.map((m, index) => {
               const toolResults = extractToolResults(m);
               const hasStructuredChanges =
                 toolResults && toolResults.length > 0;
+              const isLastMessage = index === messages.length - 1;
               return (
                 <div
                   key={m.id}
@@ -188,6 +191,9 @@ export default function ChatInterface({
                           );
                       }
                     })}
+                    {m.role === "assistant" && isLastMessage && isStreaming && (
+                      <div className="animate-pulse">...</div>
+                    )}
                     {hasStructuredChanges && (
                       <div className="mt-3 pt-3 border-t border-gray-600">
                         <button
@@ -202,13 +208,6 @@ export default function ChatInterface({
                 </div>
               );
             })}
-            {status === "submitted" && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-lg p-3 bg-gray-800 text-gray-200 border border-gray-700">
-                  <div className="animate-pulse">Thinking...</div>
-                </div>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
         )}
