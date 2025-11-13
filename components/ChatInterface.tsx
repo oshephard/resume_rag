@@ -37,11 +37,20 @@ export default function ChatInterface({
   >([]);
   const [showContextSelector, setShowContextSelector] = useState(false);
   const [allDocuments, setAllDocuments] = useState<
-    Array<{ id: number; name: string; type: "resume" | "other"; tags: string[] }>
+    Array<{
+      id: number;
+      name: string;
+      type: "resume" | "other";
+      tags: string[];
+    }>
   >([]);
   const [mentionQuery, setMentionQuery] = useState("");
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState(-1);
+  const [explicitlyRemovedIds, setExplicitlyRemovedIds] = useState<Set<number>>(
+    new Set()
+  );
+  const explicitlyRemovedIdsRef = useRef<Set<number>>(new Set());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +69,31 @@ export default function ChatInterface({
   }, []);
 
   useEffect(() => {
+    explicitlyRemovedIdsRef.current = explicitlyRemovedIds;
+  }, [explicitlyRemovedIds]);
+
+  useEffect(() => {
+    if (!allDocuments.length) return;
+
+    if (selectedDocumentId) {
+      const doc = allDocuments.find((d) => d.id === selectedDocumentId);
+      if (doc) {
+        setSelectedContextIds((prev) => {
+          if (
+            !prev.includes(selectedDocumentId) &&
+            !explicitlyRemovedIdsRef.current.has(selectedDocumentId)
+          ) {
+            const newContextIds = [...prev, selectedDocumentId];
+            updateContextDocumentsMetadata(newContextIds, allDocuments);
+            return newContextIds;
+          }
+          return prev;
+        });
+      }
+    }
+  }, [selectedDocumentId, allDocuments]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         mentionDropdownRef.current &&
@@ -73,7 +107,8 @@ export default function ChatInterface({
 
     if (showMentionDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showMentionDropdown]);
 
@@ -96,7 +131,12 @@ export default function ChatInterface({
 
   const updateContextDocumentsMetadata = (
     ids: number[],
-    docs: Array<{ id: number; name: string; type: "resume" | "other"; tags: string[] }>
+    docs: Array<{
+      id: number;
+      name: string;
+      type: "resume" | "other";
+      tags: string[];
+    }>
   ) => {
     const metadata = ids
       .map((id) => {
@@ -127,7 +167,10 @@ export default function ChatInterface({
     if (message.parts) {
       for (const part of message.parts) {
         if (part.type === "tool-provideResumeSuggestions") {
-          allStructuredChanges.push(...(part.output?.structuredChanges ?? []));
+          const output = part.output as
+            | { structuredChanges?: DiffOperation[] }
+            | undefined;
+          allStructuredChanges.push(...(output?.structuredChanges ?? []));
         }
       }
     }
@@ -212,11 +255,25 @@ export default function ChatInterface({
     const newContextIds = selectedContextIds.filter((id) => id !== docId);
     setSelectedContextIds(newContextIds);
     updateContextDocumentsMetadata(newContextIds, allDocuments);
+
+    if (docId === selectedDocumentId) {
+      setExplicitlyRemovedIds((prev) => new Set(prev).add(docId));
+    }
   };
 
   const handleContextSelectionChange = (ids: number[]) => {
     setSelectedContextIds(ids);
     updateContextDocumentsMetadata(ids, allDocuments);
+
+    if (selectedDocumentId && !ids.includes(selectedDocumentId)) {
+      setExplicitlyRemovedIds((prev) => new Set(prev).add(selectedDocumentId));
+    } else if (selectedDocumentId && ids.includes(selectedDocumentId)) {
+      setExplicitlyRemovedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(selectedDocumentId);
+        return newSet;
+      });
+    }
   };
 
   return (
@@ -506,7 +563,9 @@ export default function ChatInterface({
                 onKeyDown={(e) => {
                   if (
                     showMentionDropdown &&
-                    (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter")
+                    (e.key === "ArrowDown" ||
+                      e.key === "ArrowUp" ||
+                      e.key === "Enter")
                   ) {
                     e.preventDefault();
                   }
