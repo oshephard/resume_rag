@@ -45,4 +45,76 @@ body {
     padding: revert;
     margin: revert;
   }
+
+  /* Milkdown Crepe dark theme overrides */
+  #editorjs-container .milkdown {
+    color: rgb(243 244 246);
+  }
+
+  #editorjs-container svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container svg path,
+  #editorjs-container svg circle,
+  #editorjs-container svg rect,
+  #editorjs-container svg line,
+  #editorjs-container svg polygon,
+  #editorjs-container svg polyline {
+    stroke: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container button {
+    color: rgb(229 231 235);
+  }
+
+  #editorjs-container button svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container .crepe-toolbar_button,
+  #editorjs-container [class*="toolbar"] button,
+  #editorjs-container [class*="toolbar-button"] {
+    color: rgb(229 231 235);
+  }
+
+  #editorjs-container .crepe-toolbar_button svg,
+  #editorjs-container [class*="toolbar"] button svg,
+  #editorjs-container [class*="toolbar-button"] svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container [class*="crepe"] svg,
+  #editorjs-container [class*="milkdown"] svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container [class*="toolbar"] svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container [class*="icon"] {
+    color: rgb(209 213 219);
+  }
+
+  #editorjs-container [class*="icon"] svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container [role="button"] svg,
+  #editorjs-container [role="button"] {
+    color: rgb(209 213 219) !important;
+  }
+
+  #editorjs-container a svg {
+    color: rgb(209 213 219) !important;
+    fill: rgb(209 213 219) !important;
+  }
 }

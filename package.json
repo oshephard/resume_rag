@@ -19,6 +19,7 @@
     "@editorjs/header": "^2.8.8",
     "@editorjs/list": "^2.0.8",
     "@editorjs/paragraph": "^2.11.7",
+    "@milkdown/crepe": "^7.17.1",
     "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.90",
     "diff": "^8.0.2",

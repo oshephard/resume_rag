@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import EditorJS from "@editorjs/editorjs";
-import Header from "@editorjs/header";
-import List from "@editorjs/list";
-import Paragraph from "@editorjs/paragraph";
+import { Crepe, type CrepeBuilder } from "@milkdown/crepe";
+import "@milkdown/crepe/theme/common/style.css";
 import type { DiffOperation } from "@/lib/utils/diff";
 import { applyDiffOperations } from "@/lib/utils/diff";
 
@@ -29,106 +27,44 @@ const Editor: React.FC<EditorProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const editorRef = useRef<EditorJS | null>(null);
+  const editorRef = useRef<CrepeBuilder | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
-  const convertTextToEditorJSBlocks = useCallback((text: string) => {
-    const lines = text.split("\n").filter((line) => line.trim().length > 0);
-
-    return lines.map((line) => {
-      const trimmedLine = line.trim();
-
-      if (trimmedLine.startsWith("# ")) {
-        return {
-          type: "header",
-          data: {
-            text: trimmedLine.substring(2),
-            level: 1,
-          },
-        };
-      } else if (trimmedLine.startsWith("## ")) {
-        return {
-          type: "header",
-          data: {
-            text: trimmedLine.substring(3),
-            level: 2,
-          },
-        };
-      } else if (trimmedLine.startsWith("### ")) {
-        return {
-          type: "header",
-          data: {
-            text: trimmedLine.substring(4),
-            level: 3,
-          },
-        };
-      } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-        return {
-          type: "list",
-          data: {
-            style: "unordered",
-            items: [trimmedLine.substring(2)],
-          },
-        };
-      } else {
-        return {
-          type: "paragraph",
-          data: {
-            text: trimmedLine,
-          },
-        };
-      }
-    });
-  }, []);
-
-  const convertEditorJSBlocksToText = useCallback(async (): Promise<string> => {
+  const getMarkdown = useCallback((): string => {
     if (!editorRef.current) {
       throw new Error("Editor not initialized");
     }
+    return editorRef.current.getMarkdown();
+  }, []);
 
-    const outputData = await editorRef.current?.save();
-    const blocks = outputData.blocks || [];
+  const setMarkdown = useCallback(async (markdown: string): Promise<void> => {
+    if (!containerRef.current) {
+      throw new Error("Container not initialized");
+    }
 
-    return blocks
-      .map((block: any) => {
-        switch (block.type) {
-          case "header":
-            const level = block.data.level || 1;
-            const prefix = "#".repeat(level) + " ";
-            return prefix + block.data.text;
-          case "list":
-            return block.data.items
-              .map((item: string) => `- ${item}`)
-              .join("\n");
-          case "paragraph":
-            return block.data.text;
-          default:
-            return "";
-        }
-      })
-      .filter((line: string) => line.trim().length > 0)
-      .join("\n\n");
+    if (editorRef.current) {
+      await editorRef.current.destroy();
+    }
+
+    editorRef.current = new Crepe({
+      root: containerRef.current,
+      defaultValue: markdown,
+    });
+    await editorRef.current.create();
+    setIsEditorReady(true);
   }, []);
 
   const applyChanges = useCallback(
     async (operations: DiffOperation[]): Promise<void> => {
-      if (!editorRef.current) {
+      if (!editorRef.current || !isEditorReady) {
         throw new Error("Editor not initialized");
       }
 
       try {
-        await editorRef.current.isReady;
-      } catch (error) {
-        throw new Error("Editor not ready");
-      }
-
-      try {
-        const currentContent = await convertEditorJSBlocksToText();
+        const currentContent = getMarkdown();
         const newContent = applyDiffOperations(currentContent, operations);
-        const blocks = convertTextToEditorJSBlocks(newContent);
-
-        if (editorRef.current) {
-          await editorRef.current.render({ blocks });
-        }
+        await setMarkdown(newContent);
 
         setSuccessMessage("Changes applied successfully");
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -138,39 +74,39 @@ const Editor: React.FC<EditorProps> = ({
         throw err;
       }
     },
-    [convertEditorJSBlocksToText, convertTextToEditorJSBlocks]
+    [getMarkdown, setMarkdown, isEditorReady]
   );
 
   useEffect(() => {
-    if (!editorRef.current) {
-      editorRef.current = new EditorJS({
-        holder: EDITOR_CONTAINER_ID,
-        data: { blocks: [] },
-        inlineToolbar: ["link", "marker", "bold", "italic"],
-        tools: {
-          header: Header,
-          list: List,
-          paragraph: Paragraph,
-        },
-      });
+    if (isEditorReady && externalEditorRef) {
+      externalEditorRef.current = { applyChanges };
+    }
+  }, [isEditorReady, externalEditorRef, applyChanges]);
+
+  useEffect(() => {
+    if (!containerRef.current || editorRef.current) {
+      return;
     }
 
-    const setupEditor = async () => {
-      if (editorRef.current && externalEditorRef) {
-        try {
-          await editorRef.current.isReady;
-          externalEditorRef.current = { applyChanges };
-        } catch (error) {
-          console.error("Failed to initialize editor: ", error);
-        }
+    const initializeEditor = async () => {
+      try {
+        editorRef.current = new Crepe({
+          root: containerRef.current!,
+          defaultValue: "",
+        });
+        await editorRef.current.create();
+        setIsEditorReady(true);
+      } catch (error) {
+        console.error("Failed to initialize editor: ", error);
+        setError("Failed to initialize editor");
       }
     };
 
-    setupEditor();
-  }, [externalEditorRef, applyChanges]);
+    initializeEditor();
+  }, []);
 
   const handleSave = async () => {
-    if (!documentId || !editorRef.current) {
+    if (!documentId || !editorRef.current || !isEditorReady) {
       return;
     }
 
@@ -179,7 +115,7 @@ const Editor: React.FC<EditorProps> = ({
       setError(null);
       setSuccessMessage(null);
 
-      const content = await convertEditorJSBlocksToText();
+      const content = getMarkdown();
 
       const response = await fetch(`/api/documents/${documentId}`, {
         method: "PUT",
@@ -244,23 +180,18 @@ const Editor: React.FC<EditorProps> = ({
 
   useEffect(() => {
     const loadDocument = async () => {
-      if (!editorRef.current) {
-        return;
-      }
-
-      try {
-        await editorRef.current.isReady;
-      } catch (error) {
-        console.error("Editor not ready: ", error);
+      if (!editorRef.current || !isEditorReady) {
         return;
       }
 
       if (!documentId) {
-        if (editorRef.current) {
-          await editorRef.current.render({ blocks: [] });
+        try {
+          await setMarkdown("");
+          setError(null);
+          setSuccessMessage(null);
+        } catch (err: any) {
+          console.error("Failed to clear editor: ", err);
         }
-        setError(null);
-        setSuccessMessage(null);
         return;
       }
 
@@ -276,11 +207,7 @@ const Editor: React.FC<EditorProps> = ({
           throw new Error(data.error || "Failed to load document");
         }
 
-        const blocks = convertTextToEditorJSBlocks(data.document.content);
-
-        if (editorRef.current) {
-          await editorRef.current.render({ blocks });
-        }
+        await setMarkdown(data.document.content || "");
       } catch (err: any) {
         console.error("Failed to load document: ", err);
         setError(err.message || "Failed to load document");
@@ -290,13 +217,16 @@ const Editor: React.FC<EditorProps> = ({
     };
 
     loadDocument();
-  }, [documentId, convertTextToEditorJSBlocks]);
+  }, [documentId, isEditorReady, setMarkdown]);
 
   useEffect(() => {
     return () => {
-      if (editorRef.current && editorRef.current.destroy) {
-        editorRef.current.destroy();
+      if (editorRef.current) {
+        editorRef.current.destroy().catch((error) => {
+          console.error("Failed to destroy editor: ", error);
+        });
         editorRef.current = null;
+        setIsEditorReady(false);
       }
     };
   }, []);
@@ -390,7 +320,11 @@ const Editor: React.FC<EditorProps> = ({
           {successMessage}
         </div>
       )}
-      <div id={EDITOR_CONTAINER_ID} className="flex-1 p-4 min-h-0" />
+      <div
+        id={EDITOR_CONTAINER_ID}
+        ref={containerRef}
+        className="flex-1 p-4 min-h-0 [&_.milkdown]:text-gray-100 [&_svg]:text-gray-300 [&_svg]:fill-gray-300 [&_button]:text-gray-200 [&_.crepe-toolbar_button]:text-gray-200 [&_.crepe-toolbar_button_svg]:text-gray-200 [&_path]:stroke-gray-300 [&_circle]:stroke-gray-300 [&_rect]:stroke-gray-300 [&_line]:stroke-gray-300"
+      />
     </div>
   );
 };
