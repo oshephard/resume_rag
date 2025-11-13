@@ -16,7 +16,7 @@ export function provideResumeSuggestions(documentId?: number | null) {
       "Provide suggestions on how to improve a resume or incorporate experience into a resume. Use this tool when the user asks for resume advice, suggestions on how to add experience, or how to improve their resume.",
     inputSchema: resumeSuggestionsInputSchema,
     execute: async ({ query }) => {
-      const context = await getContextForQuery(query, 10);
+      const context = await getContextForQuery(query, 10, null);
 
       if (!context) {
         return {

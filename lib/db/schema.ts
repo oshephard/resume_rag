@@ -7,13 +7,18 @@ import {
   integer,
   vector,
   index,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+export const documentTypeEnum = pgEnum("document_type", ["resume", "other"]);
 
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   content: text("content").notNull(),
+  type: documentTypeEnum("type").default("other").notNull(),
+  tags: text("tags").array().default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -44,10 +44,26 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const name = (formData.get("name") as string) || file.name;
+    const type = (formData.get("type") as string) || "other";
+    const tagsStr = formData.get("tags") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
+
+    if (type !== "resume" && type !== "other") {
+      return NextResponse.json(
+        { error: "Invalid type. Must be 'resume' or 'other'" },
+        { status: 400 }
+      );
+    }
+
+    const tags = tagsStr
+      ? tagsStr
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0)
+      : [];
 
     // Extract text from file (handles both PDF and text files)
     const text = await extractTextFromFile(file);
@@ -63,6 +79,8 @@ export async function POST(req: NextRequest) {
     const result = await createResource({
       content: text,
       name: name,
+      type: type as "resume" | "other",
+      tags: tags,
     });
 
     return NextResponse.json({

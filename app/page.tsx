@@ -15,17 +15,29 @@ const Editor = dynamic(() => import("@/components/Editor"), {
 export default function Home() {
   const [showUpload, setShowUpload] = useState(false);
   const [showDocumentsDrawer, setShowDocumentsDrawer] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<number | null>(
+    null
+  );
   const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(
     null
   );
   const documentsListRef = useRef<{ refresh: () => void } | null>(null);
   const editorRef = useRef<EditorRef | null>(null);
 
+  const handleSelectResume = (resumeId: number) => {
+    setSelectedResumeId(resumeId);
+    setSelectedDocumentId(resumeId);
+  };
+
   const handleSelectDocument = (documentId: number) => {
     setSelectedDocumentId(documentId);
+    setSelectedResumeId(null);
   };
 
   const handleDocumentDeleted = () => {
+    if (selectedResumeId === selectedDocumentId) {
+      setSelectedResumeId(null);
+    }
     setSelectedDocumentId(null);
     if (documentsListRef.current) {
       documentsListRef.current.refresh();
@@ -145,7 +157,9 @@ export default function Home() {
             <DocumentsList
               ref={documentsListRef}
               selectedDocumentId={selectedDocumentId}
+              selectedResumeId={selectedResumeId}
               onSelectDocument={handleSelectDocument}
+              onSelectResume={handleSelectResume}
             />
           </div>
         </div>
@@ -156,7 +170,7 @@ export default function Home() {
             </div>
             <div className="flex-1 overflow-hidden">
               <ChatInterface
-                selectedDocumentId={selectedDocumentId}
+                selectedDocumentId={selectedResumeId || selectedDocumentId}
                 onApplyChanges={handleApplyChanges}
               />
             </div>

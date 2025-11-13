@@ -8,9 +8,13 @@ import { eq } from "drizzle-orm";
 export async function createResource({
   content,
   name,
+  type = "other",
+  tags = [],
 }: {
   content: string;
   name?: string;
+  type?: "resume" | "other";
+  tags?: string[];
 }) {
   try {
     const documentName = name || `Document ${Date.now()}`;
@@ -20,6 +24,8 @@ export async function createResource({
       .values({
         name: documentName,
         content: content,
+        type: type,
+        tags: tags,
       })
       .returning();
 
@@ -88,10 +94,14 @@ export async function updateResource({
   documentId,
   content,
   name,
+  type,
+  tags,
 }: {
   documentId: number;
   content: string;
   name?: string;
+  type?: "resume" | "other";
+  tags?: string[];
 }) {
   try {
     await db
@@ -99,6 +109,8 @@ export async function updateResource({
       .set({
         content: content,
         ...(name && { name }),
+        ...(type && { type }),
+        ...(tags && { tags }),
       })
       .where(eq(documents.id, documentId));
 

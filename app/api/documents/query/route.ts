@@ -5,15 +5,32 @@ import { provideResumeSuggestions } from "@/lib/tools/resume-suggestions";
 import { SYSTEM_PROMPT } from "@/constants/system-prompt";
 import { addExperience } from "@/lib/tools/add-experience";
 import { getInformation } from "@/lib/tools/get-information";
+import { db } from "@/lib/db";
+import { documents } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const documentId = body.documentId;
 
-    const systemPrompt = documentId
-      ? `${SYSTEM_PROMPT}\n\nNote: The user is currently editing document ID ${documentId}. When providing resume suggestions, you can reference this document.`
-      : SYSTEM_PROMPT;
+    let resumeId: number | null = null;
+    if (documentId) {
+      const doc = await db
+        .select({ type: documents.type })
+        .from(documents)
+        .where(eq(documents.id, documentId))
+        .limit(1);
+      if (doc.length > 0 && doc[0].type === "resume") {
+        resumeId = documentId;
+      }
+    }
+
+    const systemPrompt = resumeId
+      ? `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing resume ID ${resumeId}. When answering questions, focus on this resume, but you can also reference other documents (experiences, certifications, etc.) for context.`
+      : documentId
+        ? `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing document ID ${documentId}.`
+        : SYSTEM_PROMPT;
 
     const result = streamText({
       model: openai("gpt-4o-mini"),
@@ -30,7 +47,7 @@ export async function POST(request: NextRequest) {
       tools: {
         provideResumeSuggestions: provideResumeSuggestions(documentId),
         addExperience,
-        getInformation,
+        getInformation: getInformation(null),
       },
     });
 

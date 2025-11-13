@@ -11,6 +11,8 @@ interface UploadResponse {
 
 export default function DocumentUpload() {
   const [file, setFile] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState<"resume" | "other">("other");
+  const [tags, setTags] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -31,6 +33,14 @@ export default function DocumentUpload() {
       return;
     }
 
+    if (documentType === "other" && !tags.trim()) {
+      setMessage({
+        type: "error",
+        text: "Please add at least one tag for non-resume documents (e.g., experience, certification)",
+      });
+      return;
+    }
+
     setUploading(true);
     setMessage(null);
 
@@ -38,6 +48,10 @@ export default function DocumentUpload() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("name", file.name);
+      formData.append("type", documentType);
+      if (documentType === "other" && tags.trim()) {
+        formData.append("tags", tags);
+      }
 
       const response = await fetch("/api/documents/upload", {
         method: "POST",
@@ -52,6 +66,8 @@ export default function DocumentUpload() {
           text: `Document uploaded successfully! Processed ${data.chunksProcessed} chunks.`,
         });
         setFile(null);
+        setTags("");
+        setDocumentType("other");
         const input = document.querySelector(
           'input[type="file"]'
         ) as HTMLInputElement;
@@ -81,6 +97,50 @@ export default function DocumentUpload() {
             disabled={uploading}
           />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            Document Type
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="resume"
+                checked={documentType === "resume"}
+                onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
+                className="mr-2"
+                disabled={uploading}
+              />
+              <span className="text-sm text-gray-800">Resume</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="other"
+                checked={documentType === "other"}
+                onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
+                className="mr-2"
+                disabled={uploading}
+              />
+              <span className="text-sm text-gray-800">Other</span>
+            </label>
+          </div>
+        </div>
+        {documentType === "other" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Tags (comma-separated, e.g., experience, certification, endorsement)
+            </label>
+            <input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="experience, certification"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={uploading}
+            />
+          </div>
+        )}
         <button
           onClick={handleUpload}
           disabled={!file || uploading}

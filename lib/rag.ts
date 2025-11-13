@@ -6,14 +6,15 @@ import { eq } from "drizzle-orm";
 
 export async function findSimilarChunks(
   queryEmbedding: number[],
-  limit: number = 5
+  limit: number = 5,
+  resumeId?: number | null
 ): Promise<Array<{ chunk_text: string; document_id: number; name: string }>> {
   const similarity = sql<number>`1 - (${cosineDistance(
     embeddings.embedding,
     queryEmbedding
   )})`;
 
-  const result = await db
+  let query = db
     .select({
       chunk_text: embeddings.chunkText,
       document_id: embeddings.documentId,
@@ -21,9 +22,13 @@ export async function findSimilarChunks(
       similarity: similarity,
     })
     .from(embeddings)
-    .innerJoin(documents, eq(embeddings.documentId, documents.id))
-    .orderBy(desc(similarity))
-    .limit(limit);
+    .innerJoin(documents, eq(embeddings.documentId, documents.id));
+
+  if (resumeId) {
+    query = query.where(eq(documents.id, resumeId)) as typeof query;
+  }
+
+  const result = await query.orderBy(desc(similarity)).limit(limit);
 
   return result.map((row) => ({
     chunk_text: row.chunk_text,
@@ -34,16 +39,20 @@ export async function findSimilarChunks(
 
 export async function getContextForQuery(
   userQuery: string,
-  maxChunks: number = 5
+  maxChunks: number = 5,
+  resumeId?: number | null
 ): Promise<string> {
   const queryEmbedding = await generateEmbedding(userQuery);
-  const similarChunks = await findSimilarChunks(queryEmbedding, maxChunks);
+  const similarChunks = await findSimilarChunks(
+    queryEmbedding,
+    maxChunks,
+    resumeId
+  );
 
   if (similarChunks.length === 0) {
     return "";
   }
 
-  // Format context with clear section markers and similarity scores for debugging
   return similarChunks
     .map((chunk, index) => {
       return `--- SECTION ${index + 1} FROM: ${chunk.name} ---\n${
