@@ -10,13 +10,16 @@ import {
   resumeSuggestionsWithDiffsSchema,
 } from "@/lib/schemas/resume-suggestions";
 
-export function provideResumeSuggestions(documentId?: number | null) {
+export function provideResumeSuggestions(
+  documentId?: number | null,
+  contextIds?: number[] | null
+) {
   return tool({
     description:
       "Provide suggestions on how to improve a resume or incorporate experience into a resume. Use this tool when the user asks for resume advice, suggestions on how to add experience, or how to improve their resume.",
     inputSchema: resumeSuggestionsInputSchema,
     execute: async ({ query }) => {
-      const context = await getContextForQuery(query, 10, null);
+      const context = await getContextForQuery(query, 10, contextIds);
 
       if (!context) {
         return {

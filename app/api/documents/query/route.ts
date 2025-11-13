@@ -7,15 +7,25 @@ import { addExperience } from "@/lib/tools/add-experience";
 import { getInformation } from "@/lib/tools/get-information";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const documentId = body.documentId;
+    const contextIds = body.contextIds || (documentId ? [documentId] : null);
 
     let resumeId: number | null = null;
-    if (documentId) {
+    if (contextIds && contextIds.length > 0) {
+      const docs = await db
+        .select({ id: documents.id, type: documents.type })
+        .from(documents)
+        .where(inArray(documents.id, contextIds));
+      const resumeDoc = docs.find((doc) => doc.type === "resume");
+      if (resumeDoc) {
+        resumeId = resumeDoc.id;
+      }
+    } else if (documentId) {
       const doc = await db
         .select({ type: documents.type })
         .from(documents)
@@ -26,11 +36,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = resumeId
-      ? `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing resume ID ${resumeId}. When answering questions, focus on this resume, but you can also reference other documents (experiences, certifications, etc.) for context.`
-      : documentId
-        ? `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing document ID ${documentId}.`
-        : SYSTEM_PROMPT;
+    let systemPrompt = SYSTEM_PROMPT;
+    if (resumeId) {
+      systemPrompt = `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing resume ID ${resumeId}. When answering questions, focus on this resume, but you can also reference other documents (experiences, certifications, etc.) for context.`;
+    } else if (contextIds && contextIds.length > 0) {
+      const contextNames = await db
+        .select({ name: documents.name })
+        .from(documents)
+        .where(inArray(documents.id, contextIds));
+      const namesList = contextNames.map((d) => d.name).join(", ");
+      systemPrompt = `${SYSTEM_PROMPT}\n\nNote: The user has selected the following documents as context: ${namesList}.`;
+    } else if (documentId) {
+      systemPrompt = `${SYSTEM_PROMPT}\n\nNote: The user is currently viewing document ID ${documentId}.`;
+    }
 
     const result = streamText({
       model: openai("gpt-4o-mini"),
@@ -45,9 +63,12 @@ export async function POST(request: NextRequest) {
           ],
       stopWhen: stepCountIs(5),
       tools: {
-        provideResumeSuggestions: provideResumeSuggestions(documentId),
+        provideResumeSuggestions: provideResumeSuggestions(
+          documentId,
+          contextIds
+        ),
         addExperience,
-        getInformation: getInformation(null),
+        getInformation: getInformation(contextIds),
       },
     });
 
