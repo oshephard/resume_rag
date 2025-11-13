@@ -5,8 +5,8 @@ import DocumentUpload from "../components/DocumentUpload";
 import ChatInterface from "../components/ChatInterface";
 import DocumentsList from "../components/DocumentsList";
 import dynamic from "next/dynamic";
-import type { EditorRef } from "@/components/Editor";
 import type { DiffOperation } from "@/lib/utils/diff";
+import type { EditorRef } from "@/components/Editor";
 
 const Editor = dynamic(() => import("@/components/Editor"), {
   ssr: false,
@@ -32,13 +32,20 @@ export default function Home() {
     }
   };
 
-  const handleApplyChanges = async (operations: DiffOperation[], documentId: number) => {
+  const handleApplyChanges = async (
+    operations: DiffOperation[],
+    documentId: number
+  ) => {
     if (editorRef.current && selectedDocumentId === documentId) {
       try {
         await editorRef.current.applyChanges(operations);
       } catch (error) {
         console.error("Failed to apply changes: ", error);
       }
+    } else {
+      console.error(
+        "Failed to apply changes: editor not found or document ID mismatch"
+      );
     }
   };
 
@@ -160,9 +167,9 @@ export default function Home() {
             </div>
             <div className="flex-1 overflow-hidden">
               <Editor
-                ref={editorRef}
                 documentId={selectedDocumentId}
                 onDocumentDeleted={handleDocumentDeleted}
+                editorRef={editorRef}
               />
             </div>
           </div>
