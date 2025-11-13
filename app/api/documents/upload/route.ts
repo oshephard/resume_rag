@@ -2,6 +2,7 @@ import { createResource } from "@/lib/actions/resources";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { NextRequest, NextResponse } from "next/server";
+import { formatResumeToATS } from "@/lib/utils/resume-formatter";
 
 async function extractTextFromFile(file: File): Promise<string> {
   const fileType = file.type;
@@ -66,13 +67,28 @@ export async function POST(req: NextRequest) {
       : [];
 
     // Extract text from file (handles both PDF and text files)
-    const text = await extractTextFromFile(file);
+    let text = await extractTextFromFile(file);
 
     if (!text || text.trim().length === 0) {
       return NextResponse.json(
         { error: "File is empty or could not be read" },
         { status: 400 }
       );
+    }
+
+    // Format resume to ATS-friendly template if type is resume
+    if (type === "resume") {
+      try {
+        text = await formatResumeToATS(text);
+      } catch (error: any) {
+        console.error("Failed to format resume to ATS template: ", error);
+        return NextResponse.json(
+          {
+            error: `Failed to format resume: ${error.message || "Unknown error"}`,
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Store the document and generate embeddings

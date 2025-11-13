@@ -5,6 +5,7 @@ import { Crepe, type CrepeBuilder } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
 import type { DiffOperation } from "@/lib/utils/diff";
 import { applyDiffOperations } from "@/lib/utils/diff";
+import { generatePDFFromElement } from "@/lib/utils/pdf";
 
 const EDITOR_CONTAINER_ID = "editorjs-container";
 
@@ -25,8 +26,13 @@ const Editor: React.FC<EditorProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<"resume" | "other" | null>(
+    null
+  );
+  const [documentName, setDocumentName] = useState<string | null>(null);
   const editorRef = useRef<CrepeBuilder | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -178,6 +184,36 @@ const Editor: React.FC<EditorProps> = ({
     }
   };
 
+  const handleSaveAsPDF = async () => {
+    if (!containerRef.current || !isEditorReady) {
+      return;
+    }
+
+    try {
+      setExportingPDF(true);
+      setError(null);
+
+      const editorElement = containerRef.current.querySelector(".milkdown");
+      if (!editorElement || !(editorElement instanceof HTMLElement)) {
+        throw new Error("Editor content not found");
+      }
+
+      const filename = documentName
+        ? `${documentName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`
+        : "resume.pdf";
+
+      await generatePDFFromElement(editorElement, filename);
+
+      setSuccessMessage("PDF exported successfully");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Failed to export PDF: ", err);
+      setError(err.message || "Failed to export PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   useEffect(() => {
     const loadDocument = async () => {
       if (!editorRef.current || !isEditorReady) {
@@ -187,6 +223,8 @@ const Editor: React.FC<EditorProps> = ({
       if (!documentId) {
         try {
           await setMarkdown("");
+          setDocumentType(null);
+          setDocumentName(null);
           setError(null);
           setSuccessMessage(null);
         } catch (err: any) {
@@ -207,6 +245,8 @@ const Editor: React.FC<EditorProps> = ({
           throw new Error(data.error || "Failed to load document");
         }
 
+        setDocumentType(data.document.type || "other");
+        setDocumentName(data.document.name || null);
         await setMarkdown(data.document.content || "");
       } catch (err: any) {
         console.error("Failed to load document: ", err);
@@ -284,6 +324,56 @@ const Editor: React.FC<EditorProps> = ({
                 </>
               )}
             </button>
+            {documentType === "resume" && (
+              <button
+                onClick={handleSaveAsPDF}
+                disabled={exportingPDF || loading || saving}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {exportingPDF ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Save as PDF
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={handleDelete}
               disabled={loading || saving}

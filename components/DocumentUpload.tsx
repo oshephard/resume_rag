@@ -86,19 +86,19 @@ export default function DocumentUpload() {
     <div className="w-full">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label className="block text-sm font-medium text-gray-200 mb-2">
             Select a file (.txt, .md, or .pdf)
           </label>
           <input
             type="file"
             accept=".txt,.md,.pdf,application/pdf"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+            className="block w-full text-sm text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
             disabled={uploading}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label className="block text-sm font-medium text-gray-200 mb-2">
             Document Type
           </label>
           <div className="flex gap-4">
@@ -111,7 +111,7 @@ export default function DocumentUpload() {
                 className="mr-2"
                 disabled={uploading}
               />
-              <span className="text-sm text-gray-800">Resume</span>
+              <span className="text-sm text-gray-200">Resume</span>
             </label>
             <label className="flex items-center">
               <input
@@ -122,13 +122,13 @@ export default function DocumentUpload() {
                 className="mr-2"
                 disabled={uploading}
               />
-              <span className="text-sm text-gray-800">Other</span>
+              <span className="text-sm text-gray-200">Other</span>
             </label>
           </div>
         </div>
         {documentType === "other" && (
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Tags (comma-separated, e.g., experience, certification, endorsement)
             </label>
             <input
@@ -136,7 +136,7 @@ export default function DocumentUpload() {
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="experience, certification"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-600 rounded-md px-3 py-2 text-sm bg-gray-900 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={uploading}
             />
           </div>
@@ -144,7 +144,7 @@ export default function DocumentUpload() {
         <button
           onClick={handleUpload}
           disabled={!file || uploading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors font-medium"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-medium"
         >
           {uploading ? "Uploading..." : "Upload Document"}
         </button>
@@ -152,8 +152,8 @@ export default function DocumentUpload() {
           <div
             className={`p-3 rounded-md ${
               message.type === "success"
-                ? "bg-green-100 text-green-900 border border-green-300"
-                : "bg-red-100 text-red-900 border border-red-300"
+                ? "bg-green-900 text-green-200 border border-green-700"
+                : "bg-red-900 text-red-200 border border-red-700"
             }`}
           >
             {message.text}
