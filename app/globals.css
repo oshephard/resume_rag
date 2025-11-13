@@ -117,4 +117,24 @@ body {
     color: rgb(209 213 219) !important;
     fill: rgb(209 213 219) !important;
   }
+
+  /* Make cursor visible in editor */
+  #editorjs-container .milkdown,
+  #editorjs-container .milkdown *,
+  #editorjs-container [contenteditable="true"],
+  #editorjs-container [contenteditable="true"] * {
+    caret-color: white !important;
+  }
+
+  #editorjs-container .milkdown p,
+  #editorjs-container .milkdown h1,
+  #editorjs-container .milkdown h2,
+  #editorjs-container .milkdown h3,
+  #editorjs-container .milkdown h4,
+  #editorjs-container .milkdown h5,
+  #editorjs-container .milkdown h6,
+  #editorjs-container .milkdown li,
+  #editorjs-container .milkdown blockquote {
+    caret-color: white !important;
+  }
 }

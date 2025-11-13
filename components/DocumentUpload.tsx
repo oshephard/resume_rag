@@ -9,9 +9,19 @@ interface UploadResponse {
   error?: string;
 }
 
-export default function DocumentUpload() {
+interface DocumentUploadProps {
+  defaultType?: "resume" | "other";
+  onUploadSuccess?: () => void;
+  hideTypeSelector?: boolean;
+}
+
+export default function DocumentUpload({
+  defaultType = "other",
+  onUploadSuccess,
+  hideTypeSelector = false,
+}: DocumentUploadProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<"resume" | "other">("other");
+  const [documentType, setDocumentType] = useState<"resume" | "other">(defaultType);
   const [tags, setTags] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
@@ -67,11 +77,16 @@ export default function DocumentUpload() {
         });
         setFile(null);
         setTags("");
-        setDocumentType("other");
+        setDocumentType(defaultType);
         const input = document.querySelector(
           'input[type="file"]'
         ) as HTMLInputElement;
         if (input) input.value = "";
+        if (onUploadSuccess) {
+          setTimeout(() => {
+            onUploadSuccess();
+          }, 500);
+        }
       } else {
         setMessage({ type: "error", text: data.error || "Upload failed" });
       }
@@ -97,35 +112,37 @@ export default function DocumentUpload() {
             disabled={uploading}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-200 mb-2">
-            Document Type
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="resume"
-                checked={documentType === "resume"}
-                onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
-                className="mr-2"
-                disabled={uploading}
-              />
-              <span className="text-sm text-gray-200">Resume</span>
+        {!hideTypeSelector && (
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Document Type
             </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="other"
-                checked={documentType === "other"}
-                onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
-                className="mr-2"
-                disabled={uploading}
-              />
-              <span className="text-sm text-gray-200">Other</span>
-            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="resume"
+                  checked={documentType === "resume"}
+                  onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
+                  className="mr-2"
+                  disabled={uploading}
+                />
+                <span className="text-sm text-gray-200">Resume</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="other"
+                  checked={documentType === "other"}
+                  onChange={(e) => setDocumentType(e.target.value as "resume" | "other")}
+                  className="mr-2"
+                  disabled={uploading}
+                />
+                <span className="text-sm text-gray-200">Other</span>
+              </label>
+            </div>
           </div>
-        </div>
+        )}
         {documentType === "other" && (
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">

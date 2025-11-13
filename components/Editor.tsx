@@ -16,12 +16,14 @@ export interface EditorRef {
 export interface EditorProps {
   documentId?: number | null;
   onDocumentDeleted?: () => void;
+  onClose?: () => void;
   editorRef?: React.MutableRefObject<EditorRef | null>;
 }
 
 const Editor: React.FC<EditorProps> = ({
   documentId,
   onDocumentDeleted,
+  onClose,
   editorRef: externalEditorRef,
 }) => {
   const [loading, setLoading] = useState(false);
@@ -245,9 +247,10 @@ const Editor: React.FC<EditorProps> = ({
           throw new Error(data.error || "Failed to load document");
         }
 
+        const content = data.document.content || "";
         setDocumentType(data.document.type || "other");
         setDocumentName(data.document.name || null);
-        await setMarkdown(data.document.content || "");
+        await setMarkdown(content);
       } catch (err: any) {
         console.error("Failed to load document: ", err);
         setError(err.message || "Failed to load document");
@@ -275,6 +278,30 @@ const Editor: React.FC<EditorProps> = ({
     <div className="flex-1 border border-gray-700 rounded-lg overflow-y-auto bg-gray-900 min-h-0 h-full flex flex-col">
       {documentId && (
         <div className="p-4 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-800"
+                aria-label="Close editor"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+            <span className="text-white font-medium">{documentName}</span>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
@@ -413,12 +440,15 @@ const Editor: React.FC<EditorProps> = ({
       <div
         id={EDITOR_CONTAINER_ID}
         ref={containerRef}
-        className="flex-1 p-4 min-h-0 [&_.milkdown]:text-gray-100 [&_svg]:text-gray-300 [&_svg]:fill-gray-300 [&_button]:text-gray-200 [&_.crepe-toolbar_button]:text-gray-200 [&_.crepe-toolbar_button_svg]:text-gray-200 [&_path]:stroke-gray-300 [&_circle]:stroke-gray-300 [&_rect]:stroke-gray-300 [&_line]:stroke-gray-300"
+        className="flex-1 p-4 min-h-0 [&_.milkdown]:text-gray-100 [&_svg]:text-gray-300 [&_svg]:fill-gray-300 [&_button]:text-gray-200 [&_.crepe-toolbar_button]:text-gray-200 [&_.crepe-toolbar_button_svg]:text-gray-200 [&_path]:stroke-gray-300 [&_circle]:stroke-gray-300 [&_rect]:stroke-gray-300 [&_line]:stroke-gray-300 [&_.milkdown_editor]:caret-white [&_*]:caret-white"
+        style={
+          {
+            caretColor: "white",
+          } as React.CSSProperties
+        }
       />
     </div>
   );
 };
-
-Editor.displayName = "Editor";
 
 export default Editor;

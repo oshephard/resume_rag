@@ -32,6 +32,7 @@ export default function ChatInterface({
   } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,8 +85,10 @@ export default function ChatInterface({
           </div>
         )}
         {messages.length === 0 ? (
-          <div className="text-gray-400 text-center mt-8">
-            Ask a question about your uploaded documents...
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg p-3 bg-gray-800 text-gray-200 border border-gray-700">
+              How can I help you today?
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -212,33 +215,96 @@ export default function ChatInterface({
           </div>
         )}
       </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          sendMessage(
-            { text: input },
-            { body: { documentId: selectedDocumentId } }
-          );
-          setInput("");
-        }}
-        className="flex gap-2 flex-shrink-0"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question or use /new-experience to add an experience..."
-          className="flex-1 border border-gray-700 rounded-md px-3 py-2 text-sm bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={status === "submitted"}
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || status === "submitted"}
-          className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+      <div className="flex-shrink-0">
+        <div className="flex flex-wrap gap-2 mb-2 items-center">
+          <button
+            type="button"
+            onClick={() => {
+              setInput("/new-experience ");
+              setTimeout(() => {
+                inputRef.current?.focus();
+              }, 0);
+            }}
+            disabled={status === "submitted"}
+            className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Experience
+            <div className="relative group">
+              <button
+                type="button"
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                aria-label="Information about New Experience"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
+                <div className="bg-gray-900 text-gray-200 text-xs rounded-lg px-3 py-2 shadow-lg border border-gray-700 w-64">
+                  <p>
+                    Click to add a new experience to your history. This will
+                    insert the command and prompt you to describe your
+                    experience, including details like date, description,
+                    company, position, and more.
+                  </p>
+                  <div className="absolute top-full left-4 -mt-1 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 transform rotate-45"></div>
+                </div>
+              </div>
+            </div>
+          </button>
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage(
+              { text: input },
+              { body: { documentId: selectedDocumentId } }
+            );
+            setInput("");
+          }}
+          className="flex gap-2"
         >
-          Send
-        </button>
-      </form>
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask a question or use /new-experience to add an experience..."
+            className="flex-1 border border-gray-700 rounded-md px-3 py-2 text-sm bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={status === "submitted"}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || status === "submitted"}
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          >
+            Send
+          </button>
+        </form>
+      </div>
       {pendingChanges && (
         <DiffPreview
           operations={pendingChanges.operations}
