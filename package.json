@@ -21,6 +21,7 @@
     "@editorjs/paragraph": "^2.11.7",
     "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.90",
+    "diff": "^8.0.2",
     "drizzle-orm": "^0.44.7",
     "next": "^14.2.5",
     "openai": "^6.8.1",
@@ -33,6 +34,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/diff": "^8.0.0",
     "@types/node": "^22.5.5",
     "@types/pg": "^8.15.6",
     "@types/react": "^18.3.5",

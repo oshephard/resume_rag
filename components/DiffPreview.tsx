@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { DiffOperation } from "@/lib/utils/diff";
-import { generateDiffPreview } from "@/lib/utils/diff";
+import { generateDiffPreview, applyDiffOperations } from "@/lib/utils/diff";
 
 interface DiffPreviewProps {
   operations: DiffOperation[];
@@ -38,44 +38,8 @@ export default function DiffPreview({
         const currentContent = data.document.content;
         setOldContent(currentContent);
 
-        const lines = currentContent.split("\n");
-        const result: string[] = [];
-        let currentLine = 0;
-
-        for (const op of operations) {
-          const targetLine = op.line !== undefined ? op.line : currentLine;
-
-          while (currentLine < targetLine && currentLine < lines.length) {
-            result.push(lines[currentLine]);
-            currentLine++;
-          }
-
-          switch (op.type) {
-            case "insert":
-              result.push(op.newText);
-              break;
-            case "delete":
-              if (currentLine < lines.length) {
-                currentLine++;
-              }
-              break;
-            case "replace":
-              if (currentLine < lines.length) {
-                result.push(op.newText);
-                currentLine++;
-              } else {
-                result.push(op.newText);
-              }
-              break;
-          }
-        }
-
-        while (currentLine < lines.length) {
-          result.push(lines[currentLine]);
-          currentLine++;
-        }
-
-        setNewContent(result.join("\n"));
+        const newContent = applyDiffOperations(currentContent, operations);
+        setNewContent(newContent);
       } catch (err: any) {
         console.error("Failed to load document for diff preview: ", err);
         setError(err.message || "Failed to load document");

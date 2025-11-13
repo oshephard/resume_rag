@@ -20,9 +20,6 @@ export default function ChatInterface({
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/documents/query",
-      body: {
-        documentId: selectedDocumentId,
-      },
     }),
   });
 
@@ -52,7 +49,7 @@ export default function ChatInterface({
     if (message.parts) {
       for (const part of message.parts) {
         if (part.type === "tool-provideResumeSuggestions") {
-          allStructuredChanges.push(...part.output?.structuredChanges);
+          allStructuredChanges.push(...(part.output?.structuredChanges ?? []));
         }
       }
     }
@@ -61,6 +58,7 @@ export default function ChatInterface({
   };
 
   const handleApplyClick = (operations: DiffOperation[]) => {
+    if (!selectedDocumentId) return;
     setPendingChanges({ operations, documentId: selectedDocumentId });
   };
 
@@ -206,7 +204,7 @@ export default function ChatInterface({
             })}
             {status === "submitted" && (
               <div className="flex justify-start">
-                <div className="bg-gray-800 text-gray-200 border border-gray-700">
+                <div className="max-w-[80%] rounded-lg p-3 bg-gray-800 text-gray-200 border border-gray-700">
                   <div className="animate-pulse">Thinking...</div>
                 </div>
               </div>
@@ -218,7 +216,10 @@ export default function ChatInterface({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          sendMessage({ text: input });
+          sendMessage(
+            { text: input },
+            { body: { documentId: selectedDocumentId } }
+          );
           setInput("");
         }}
         className="flex gap-2 flex-shrink-0"
