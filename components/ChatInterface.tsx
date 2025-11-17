@@ -477,6 +477,63 @@ export default function ChatInterface({
           </button>
           <button
             type="button"
+            onClick={() => {
+              setInput("/job-posting ");
+              setTimeout(() => {
+                inputRef.current?.focus();
+              }, 0);
+            }}
+            disabled={status === "submitted"}
+            className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            Job Posting
+            <div className="relative group">
+              <button
+                type="button"
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                aria-label="Information about Job Posting"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
+                <div className="bg-gray-900 text-gray-200 text-xs rounded-lg px-3 py-2 shadow-lg border border-gray-700 w-64">
+                  <p>
+                    Click to save a job posting. Paste the job posting text and
+                    optionally include a link to the posting. It will be saved
+                    as a document with the "job" tag.
+                  </p>
+                  <div className="absolute top-full left-4 -mt-1 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 transform rotate-45"></div>
+                </div>
+              </div>
+            </div>
+          </button>
+          <button
+            type="button"
             onClick={() => setShowContextSelector(true)}
             disabled={status === "submitted"}
             className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
@@ -570,7 +627,7 @@ export default function ChatInterface({
                     e.preventDefault();
                   }
                 }}
-                placeholder="Ask a question, type @ to mention a document, or use /new-experience..."
+                placeholder="Ask a question, type @ to mention a document, or use /new-experience or /job-posting..."
                 className="w-full border border-gray-700 rounded-md px-3 py-2 text-sm bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={status === "submitted"}
               />

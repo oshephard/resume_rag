@@ -4,6 +4,7 @@ import { openai } from "@ai-sdk/openai";
 import { provideResumeSuggestions } from "@/lib/tools/resume-suggestions";
 import { SYSTEM_PROMPT } from "@/constants/system-prompt";
 import { addExperience } from "@/lib/tools/add-experience";
+import { addJobPosting } from "@/lib/tools/add-job-posting";
 import { getInformation } from "@/lib/tools/get-information";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
           contextIds
         ),
         addExperience,
+        addJobPosting,
         getInformation: getInformation(contextIds),
       },
     });
