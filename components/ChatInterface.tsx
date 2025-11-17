@@ -443,9 +443,11 @@ export default function ChatInterface({
             </svg>
             New Experience
             <div className="relative group">
-              <button
-                type="button"
-                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
                 aria-label="Information about New Experience"
               >
                 <svg
@@ -461,7 +463,7 @@ export default function ChatInterface({
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              </button>
+              </div>
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
                 <div className="bg-gray-900 text-gray-200 text-xs rounded-lg px-3 py-2 shadow-lg border border-gray-700 w-64">
                   <p>
@@ -501,9 +503,11 @@ export default function ChatInterface({
             </svg>
             Job Posting
             <div className="relative group">
-              <button
-                type="button"
-                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
                 aria-label="Information about Job Posting"
               >
                 <svg
@@ -519,7 +523,7 @@ export default function ChatInterface({
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              </button>
+              </div>
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 pointer-events-none">
                 <div className="bg-gray-900 text-gray-200 text-xs rounded-lg px-3 py-2 shadow-lg border border-gray-700 w-64">
                   <p>
