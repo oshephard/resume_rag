@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { convertToModelMessages, stepCountIs, streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { getLanguageModel } from "@/lib/config/ai-provider";
 import { provideResumeSuggestions } from "@/lib/tools/resume-suggestions";
 import { SYSTEM_PROMPT } from "@/constants/system-prompt";
 import { addExperience } from "@/lib/tools/add-experience";
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = streamText({
-      model: openai("gpt-4o-mini"),
+      model: getLanguageModel(),
       system: systemPrompt,
       messages: body.messages
         ? convertToModelMessages(body.messages)

@@ -1,5 +1,5 @@
 import { embedMany } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { getEmbeddingModel } from "@/lib/config/ai-provider";
 
 const CHUNK_SIZE = 1000;
 const CHUNK_OVERLAP = 200;
@@ -53,7 +53,7 @@ export function chunkText(text: string): string[] {
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   const { embeddings } = await embedMany({
-    model: openai.embedding("text-embedding-3-small"),
+    model: getEmbeddingModel(),
     values: [text],
   });
 
@@ -70,7 +70,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   }
 
   const { embeddings } = await embedMany({
-    model: openai.embedding("text-embedding-3-small"),
+    model: getEmbeddingModel(),
     values: texts,
   });
 

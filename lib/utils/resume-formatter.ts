@@ -1,9 +1,12 @@
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { getLanguageModel } from "@/lib/config/ai-provider";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-const TEMPLATE_PATH = join(process.cwd(), "lib/templates/ats-resume-template.md");
+const TEMPLATE_PATH = join(
+  process.cwd(),
+  "lib/templates/ats-resume-template.md"
+);
 
 export function getATSTemplate(): string {
   try {
@@ -14,12 +17,14 @@ export function getATSTemplate(): string {
   }
 }
 
-export async function formatResumeToATS(rawResumeText: string): Promise<string> {
+export async function formatResumeToATS(
+  rawResumeText: string
+): Promise<string> {
   const template = getATSTemplate();
 
   try {
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: getLanguageModel("gpt-4o"),
       system: `You are an expert resume formatter specializing in ATS (Applicant Tracking System) compatibility.
 
 Your task is to reformat the provided resume content to match the ATS-friendly template structure exactly.
@@ -73,4 +78,3 @@ IMPORTANT: When information is missing from the source resume, keep the template
     throw error;
   }
 }
-

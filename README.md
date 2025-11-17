@@ -40,13 +40,15 @@ An AI-powered resume assistant that helps you manage your resume, answer questio
   - Automatic text chunking and embedding generation
   - PostgreSQL database storage with pgvector extension
   - Semantic search using cosine similarity
-  - AI-powered Q&A using OpenAI GPT models
+  - AI-powered Q&A using OpenAI GPT models or Ollama (local, open-source)
 
 ## Prerequisites
 
 - Node.js 18+ (Node 20+ recommended)
 - PostgreSQL database with the [pgvector extension](https://github.com/pgvector/pgvector) installed
-- OpenAI API key
+- **AI Provider (choose one):**
+  - **OpenAI**: OpenAI API key (required if using OpenAI)
+  - **Ollama**: Ollama installed and running locally (required if using Ollama)
 
 ### Installing pgvector
 
@@ -112,10 +114,29 @@ yarn install
 2. Set up environment variables:
    Create a `.env.local` file in the root directory:
 
+**For OpenAI:**
+
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+**For Ollama (local, open-source):**
+
+```
+AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+```
+
+**Environment Variables:**
+
+- `DATABASE_URL` (required): PostgreSQL connection string
+- `AI_PROVIDER` (optional, default: `openai`): Choose `openai` or `ollama`
+- `OPENAI_API_KEY` (required if `AI_PROVIDER=openai`): Your OpenAI API key
+- `OLLAMA_BASE_URL` (optional, default: `http://localhost:11434`): Ollama server URL
+- `OLLAMA_MODEL` (optional, default: `llama3.2`): Ollama model name to use
 
 3. Initialize the database:
    The database tables will be created automatically on first use, or you can run migrations:
@@ -167,10 +188,11 @@ yarn dev
 ## Architecture
 
 - **Database Schema**: Generic `documents` and `embeddings` tables supporting document types and tags
-- **Embeddings**: Uses OpenAI's `text-embedding-3-small` model (1536 dimensions)
+- **Embeddings**: Uses OpenAI's `text-embedding-3-small` model (1536 dimensions) or Ollama embedding model
 - **RAG**: Retrieves top 10 most similar chunks using cosine similarity for context
-- **LLM**: Uses GPT-4o-mini for generating answers and suggestions with context
+- **LLM**: Uses GPT-4o-mini (OpenAI) or configured Ollama model for generating answers and suggestions with context
 - **Tools**: AI tools for adding experiences, saving job postings, getting information, and providing resume suggestions
+- **AI Provider**: Configurable between OpenAI and Ollama via `AI_PROVIDER` environment variable
 
 ## Technology Stack
 

@@ -1,6 +1,6 @@
 import { createResource } from "@/lib/actions/resources";
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { getLanguageModel } from "@/lib/config/ai-provider";
 import { NextRequest, NextResponse } from "next/server";
 import { formatResumeToATS } from "@/lib/utils/resume-formatter";
 
@@ -13,7 +13,7 @@ async function extractTextFromFile(file: File): Promise<string> {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: getLanguageModel("gpt-4o"),
       messages: [
         {
           role: "user",
@@ -84,7 +84,9 @@ export async function POST(req: NextRequest) {
         console.error("Failed to format resume to ATS template: ", error);
         return NextResponse.json(
           {
-            error: `Failed to format resume: ${error.message || "Unknown error"}`,
+            error: `Failed to format resume: ${
+              error.message || "Unknown error"
+            }`,
           },
           { status: 500 }
         );

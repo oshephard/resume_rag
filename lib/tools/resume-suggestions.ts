@@ -1,5 +1,5 @@
 import { tool } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { getLanguageModel } from "@/lib/config/ai-provider";
 import { generateText, generateObject } from "ai";
 import { getContextForQuery } from "@/lib/rag";
 import { db } from "@/lib/db";
@@ -51,7 +51,7 @@ export function provideResumeSuggestions(
         try {
           const lines = currentDocumentContent.split("\n");
           const { object } = await generateObject({
-            model: openai("gpt-4o-mini"),
+            model: getLanguageModel(),
             schema: resumeSuggestionsWithDiffsSchema,
             system: `You are an expert resume advisor and editor helping users improve their resume.
 
@@ -108,7 +108,7 @@ The operations array MUST contain at least one operation representing a concrete
         }
       } else {
         const { text: suggestions } = await generateText({
-          model: openai("gpt-4o-mini"),
+          model: getLanguageModel(),
           system: `You are an expert resume advisor helping users improve their resume. 
 Your task is to analyze their experience and documentation, then provide specific, actionable suggestions on how to incorporate it into their resume.
 

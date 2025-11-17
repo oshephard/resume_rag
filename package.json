@@ -27,6 +27,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
     "next": "^14.2.5",
+    "ollama-ai-provider-v2": "^1.5.4",
     "openai": "^6.8.1",
     "pdfjs-dist": "3.11.174",
     "pg": "^8.16.3",
