@@ -117,7 +117,6 @@ yarn install
 **For OpenAI:**
 
 ```
-
 AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key_here
 ```
@@ -132,7 +131,7 @@ OLLAMA_MODEL=llama3.2
 
 **Environment Variables:**
 
-- `DATABASE_URL` (required): PostgreSQL connection string
+- `DATABASE_URL` (required): PostgreSQL connection string, e.g. `postgresql://user:password@localhost:5432/dbname`
 - `AI_PROVIDER` (optional, default: `openai`): Choose `openai` or `ollama`
 - `OPENAI_API_KEY` (required if `AI_PROVIDER=openai`): Your OpenAI API key
 - `OLLAMA_BASE_URL` (optional, default: `http://localhost:11434`): Ollama server URL
